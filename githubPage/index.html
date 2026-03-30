@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDEBench-Lang: Does Representation Affect Neural Symbolic Pruning and Reasoning?</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #7c3aed;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700; }
+        .hero .subtitle { font-size: 1.2rem; opacity: 0.9; margin-bottom: 1.5rem; }
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            margin: 0.25rem;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+        .section h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+        .section h3 { color: var(--text); font-size: 1.2rem; margin: 1.5rem 0 0.75rem; }
+        p { margin-bottom: 1rem; }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .team-member {
+            background: var(--bg);
+            padding: 1.25rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .team-member .name { font-weight: 600; color: var(--primary); margin-bottom: 0.25rem; }
+        .team-member .role { font-size: 0.85rem; color: var(--text-muted); }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.75rem; text-align: left; border: 1px solid var(--border); }
+        th { background: var(--bg); font-weight: 600; color: var(--primary); }
+        tr:hover { background: #f1f5f9; }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            white-space: pre-wrap;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+            margin: 1rem 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card .number { font-size: 2rem; font-weight: 700; }
+        .stat-card .label { font-size: 0.85rem; opacity: 0.9; }
+        .placeholder {
+            background: #f1f5f9;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .placeholder-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        ul { margin: 1rem 0 1rem 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        .dialect-examples { display: grid; gap: 0.75rem; margin: 1rem 0; }
+        .dialect-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: 6px;
+        }
+        .dialect-label { font-weight: 600; color: var(--primary); min-width: 120px; }
+        .dialect-value { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; }
+        .references { font-size: 0.9rem; }
+        .references li { margin-bottom: 0.75rem; }
+        footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; }
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.75rem; }
+            .container { padding: 1rem; }
+            .section { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <h1>PDEBench-Lang</h1>
+        <p class="subtitle">Does Representation Affect Neural Symbolic Pruning and Reasoning?</p>
+        <div>
+            <span class="badge">CSCI 5541 NLP S26</span>
+            <span class="badge">Team: Token Efforts</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="section">
+            <h2>Team Members</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="name">Raghav Anand</div>
+                    <div class="role">Dataset generation and symbolic conversion</div>
+                </div>
+                <div class="team-member">
+                    <div class="name">Krivan Semlani</div>
+                    <div class="role">Model fine-tuning and pruning evaluation</div>
+                </div>
+                <div class="team-member">
+                    <div class="name">Peilin Li</div>
+                    <div class="role">Reasoning fidelity analysis and benchmarking</div>
+                </div>
+                <div class="team-member">
+                    <div class="name">Yit Xiaang Ztang</div>
+                    <div class="role">Cross-dialect evaluation and benchmarking</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Abstract</h2>
+            <p>
+                PDEs are the mathematical language used to describe physical phenomena like heat, waves, and fluid flow. 
+                Most neural models treat them as black-box computations—we argue they should be read as structured symbolic expressions. 
+                <strong>PDEBench-Lang</strong> tests whether the format a PDE is written in (Postfix, LaTeX, Prefix, or natural language) 
+                changes how well a language model can reason about it and narrow down its solution space.
+            </p>
+            <p>
+                We build on Bhatnagar et al. (2025), challenge their assumption that Postfix is the best format for neural reasoning, 
+                and introduce a metric to tell apart genuine structural understanding from lucky guessing. 
+                Our dataset spans five PDE families with controlled coefficient sampling.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>Motivation and Problem Definition</h2>
+            <p>
+                Partial Differential Equations (PDEs) are the formal language used to describe physical phenomena such as diffusion, 
+                wave propagation, fluid flow, and electrostatics. A trained physicist encountering the equation:
+            </p>
+            <p style="text-align: center; font-size: 1.2rem; margin: 1.5rem 0;">
+                \( u_{t} = 0.5 \, u_{xx} \)
+            </p>
+            <p>
+                immediately recognises it as a description of diffusion—not by solving it numerically, but by reading its structural composition: 
+                the relationship between a first-order time derivative and a second-order spatial derivative. This recognition is purely symbolic.
+            </p>
+            <div class="highlight">
+                <strong>Central Question:</strong> Does the symbolic representation format of a PDE influence how well a neural model 
+                can reason about and prune the symbolic solution space?
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Background and Novelty</h2>
+            <h3>LLM-Guided Symbolic Pruning</h3>
+            <p>
+                Our work builds directly on Bhatnagar et al. (2025), "From Equations to Insights." Symbolic PDE solving is combinatorially explosive. 
+                A fine-tuned LLM can predict which operators are likely in the solution, allowing a symbolic solver (like FEX) to restrict its search 
+                and achieve a 4-6x speedup.
+            </p>
+            <p>
+                The gap in current research is the choice of representation format. Bhatnagar et al. chose Postfix (Reverse Polish Notation) 
+                on computational grounds (it removes parentheses and is easy to parse). However, they did not evaluate whether Postfix is optimal 
+                for neural semantic reasoning.
+            </p>
+            
+            <h3>Our Hypothesis</h3>
+            <p>
+                LLMs are pretrained primarily on LaTeX-formatted mathematics and natural language descriptions—not on Postfix. 
+                Forcing Postfix may introduce representational misalignment. We hypothesize that raw LaTeX-style representation may lead to 
+                better symbolic pruning and more faithful reasoning than Postfix.
+            </p>
+
+            <h3>Key Contributions</h3>
+            <ul>
+                <li><strong>Four Symbolic Dialects:</strong> We compare Postfix, Raw LaTeX, Prefix, and Natural Language.</li>
+                <li><strong>Explicit Reasoning Chains:</strong> We require models to generate structured reasoning chains, not just operator predictions.</li>
+                <li><strong>Reasoning Fidelity Metric:</strong> We introduce a novel metric ("Trash Score") to measure whether explanations are structurally correct.</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Methodology</h2>
+            
+            <h3>1. Dataset Generation</h3>
+            <p>
+                We construct a synthetic dataset spanning five canonical PDE families: <strong>Heat (Diffusion)</strong>, <strong>Wave</strong>, 
+                <strong>Burgers</strong>, <strong>Laplace</strong>, and <strong>Advection</strong>. For each instance, we randomly sample equation coefficients, 
+                generate the symbolic expression, and convert it into all four target representations.
+            </p>
+
+            <h4 style="margin-top: 1.5rem; color: var(--text-muted);">The Four Symbolic Dialects</h4>
+            <p>Example encoding of \( u_{t} = 0.5 \, u_{xx} \):</p>
+            <div class="dialect-examples">
+                <div class="dialect-item">
+                    <span class="dialect-label">Postfix (RPN)</span>
+                    <span class="dialect-value">u t d 0.5 u x x d d * =</span>
+                </div>
+                <div class="dialect-item">
+                    <span class="dialect-label">Raw LaTeX</span>
+                    <span class="dialect-value">u_{t}=0.5\,u_{xx}</span>
+                </div>
+                <div class="dialect-item">
+                    <span class="dialect-label">Prefix</span>
+                    <span class="dialect-value">= d(u,t) * (0.5, d(d(u,x),x))</span>
+                </div>
+                <div class="dialect-item">
+                    <span class="dialect-label">Natural Language</span>
+                    <span class="dialect-value">"The time derivative of u equals one-half the second spatial derivative of u."</span>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 1.5rem; color: var(--text-muted);">Complete Input-Output Example</h4>
+            <table>
+                <tr>
+                    <th>Component</th>
+                    <th>Content</th>
+                </tr>
+                <tr>
+                    <td><strong>Input</strong></td>
+                    <td>\( u_{t} = 0.5 \, u_{xx} \)</td>
+                </tr>
+                <tr>
+                    <td><strong>(1) Structural Reasoning</strong></td>
+                    <td>Contains a 1st-order time derivative; contains a 2nd-order spatial derivative; structure indicates diffusive transport.</td>
+                </tr>
+                <tr>
+                    <td><strong>(2) Behavioral Label</strong></td>
+                    <td>Heat / Diffusion</td>
+                </tr>
+                <tr>
+                    <td><strong>(3) Operator Subset</strong></td>
+                    <td>{exp, polynomial}</td>
+                </tr>
+            </table>
+
+            <h3>2. Model Training</h3>
+            <p>
+                We fine-tune a sequence-to-sequence model (either T5 or BART) on the task of mapping a PDE representation to the three target outputs. 
+                Each of the four symbolic representations is trained independently, producing parallel models whose outputs can be compared under controlled conditions.
+            </p>
+
+            <h3>3. Evaluation</h3>
+            <p>
+                Evaluation proceeds along three primary dimensions. The most novel of these is Reasoning Fidelity. 
+                We define a "trash explanation" as an output that arrives at the correct PDE family label via structurally incorrect reasoning.
+            </p>
+            <table>
+                <tr>
+                    <th>Dimension</th>
+                    <th>Metric</th>
+                    <th>Definition</th>
+                </tr>
+                <tr>
+                    <td>Pruning Quality</td>
+                    <td>Precision, Recall</td>
+                    <td>Overlap of predicted vs. ground-truth operator subset; degree of search-space reduction</td>
+                </tr>
+                <tr>
+                    <td>Label Accuracy</td>
+                    <td>Accuracy</td>
+                    <td>Fraction of instances with correct PDE family classification</td>
+                </tr>
+                <tr>
+                    <td>Reasoning Fidelity</td>
+                    <td>Trash Score</td>
+                    <td>Rate of outputs with correct label but structurally incorrect reasoning chain</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="section">
+            <h2>Dataset Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="number">5</div>
+                    <div class="label">PDE Families</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">4</div>
+                    <div class="label">Symbolic Dialects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">3</div>
+                    <div class="label">Output Labels</div>
+                </div>
+            </div>
+
+            <h3>PDE Families Covered</h3>
+            <table>
+                <tr>
+                    <th>Family</th>
+                    <th>Coefficients</th>
+                    <th>Operators</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>Heat (Diffusion)</td>
+                    <td>alpha (diffusion coefficient)</td>
+                    <td>exp, polynomial</td>
+                    <td>Diffusive transport — spatial curvature drives temporal change</td>
+                </tr>
+                <tr>
+                    <td>Wave</td>
+                    <td>c (wave speed)</td>
+                    <td>sin, cos, polynomial</td>
+                    <td>Wave propagation with oscillatory solutions</td>
+                </tr>
+                <tr>
+                    <td>Burgers</td>
+                    <td>nu (viscosity)</td>
+                    <td>tanh, polynomial</td>
+                    <td>Nonlinear convection balanced against diffusion</td>
+                </tr>
+                <tr>
+                    <td>Advection</td>
+                    <td>c (advection speed)</td>
+                    <td>exp, polynomial</td>
+                    <td>Pure transport — solution propagates at constant speed</td>
+                </tr>
+                <tr>
+                    <td>Laplace</td>
+                    <td>—</td>
+                    <td>polynomial, exp</td>
+                    <td>Steady-state with no time evolution</td>
+                </tr>
+            </table>
+
+            <h3>Sample Data Instance</h3>
+            <div class="code-block">{
+  "family": "Heat",
+  "coefficients": { "alpha": 1.8 },
+  "dialects": {
+    "latex": "\\frac{\\partial}{\\partial t} u = 1.8 \\frac{\\partial^{2}}{\\partial x^{2}} u",
+    "prefix": "= d(u,t) *(1.8 d(d(u,x),x))",
+    "postfix": "u t d 1.8 u x x d d * =",
+    "natural": "The time derivative of u equals 1.8 times the second spatial derivative of u."
+  },
+  "labels": {
+    "behavioral": "Heat",
+    "operators": ["exp", "polynomial"],
+    "reasoning": "The equation contains a 1st-order time derivative (u_t) on the LHS 
+                  and a 2nd-order spatial derivative (u_xx) on the RHS..."
+  }
+}</div>
+        </section>
+
+        <section class="section">
+            <h2>Expected Contributions</h2>
+            <ul>
+                <li><strong>A Controlled Benchmark:</strong> Introduces a benchmark for studying representation effects in symbolic PDE reasoning, treating format as an empirical variable rather than a fixed engineering choice.</li>
+                <li><strong>Cross-Dialect Comparison:</strong> Provides the first systematic comparison of LLM-guided operator pruning across four symbolic representations.</li>
+                <li><strong>Empirical Evidence:</strong> Offers concrete evidence on whether computationally convenient representations (Postfix) are semantically optimal, or if representations closer to pretraining distributions yield superior reasoning fidelity.</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Model Selection</h2>
+            <div class="placeholder">
+                <div class="placeholder-icon">🔄</div>
+                <p><strong>In Progress</strong></p>
+                <p>Model selection and testing currently underway. Results coming soon.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Results</h2>
+            <div class="placeholder">
+                <div class="placeholder-icon">📊</div>
+                <p><strong>Coming Soon</strong></p>
+                <p>Experimental results will be published after testing is complete.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Analysis</h2>
+            <div class="placeholder">
+                <div class="placeholder-icon">🧪</div>
+                <p><strong>Pending</strong></p>
+                <p>In-depth analysis of results will be provided here.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Conclusion</h2>
+            <div class="placeholder">
+                <div class="placeholder-icon">✍️</div>
+                <p><strong>To Be Determined</strong></p>
+                <p>Conclusions will be drawn after experiments are completed.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>References</h2>
+            <ul class="references">
+                <li>Bhatnagar, A. et al. (2025). <em>From equations to insights.</em> Preprint.</li>
+                <li>d'Ascoli, S. et al. (2024). <em>ODEFormer: Symbolic regression of dynamical systems.</em> ICLR 2024.</li>
+                <li>Lample, G., and Charton, F. (2020). <em>Deep learning for symbolic mathematics.</em> ICLR 2020.</li>
+                <li>Sun, H. et al. (2024). <em>PROSE-PDE: Multimodal learning of governing equations.</em> Preprint.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>PDEBench-Lang | CSCI 5541 NLP S26 | Team Token Efforts</p>
+        <p style="margin-top: 0.5rem;">
+            <a href="https://github.com/RaghavKrishn/Nlp-group-final-project" style="color: var(--primary);">View on GitHub</a>
+        </p>
+    </footer>
+</body>
+</html>
