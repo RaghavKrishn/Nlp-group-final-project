@@ -414,38 +414,127 @@
 
         <section class="section">
             <h2>Model Selection</h2>
-            <div class="placeholder">
-                <div class="placeholder-icon">🔄</div>
-                <p><strong>In Progress</strong></p>
-                <p>Model selection and testing currently underway. Results coming soon.</p>
-            </div>
+            <p>
+                For our initial baseline, we selected <strong>T5-small</strong> (60M parameters) as our sequence-to-sequence model.
+                T5's encoder-decoder architecture is well-suited for our task of mapping PDE representations to structured outputs
+                containing family labels, operators, and reasoning chains.
+            </p>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+                <tr><td>Model</td><td>T5-small (60M params)</td></tr>
+                <tr><td>Input Dialect</td><td>Natural Language</td></tr>
+                <tr><td>Training Epochs</td><td>3</td></tr>
+                <tr><td>Batch Size</td><td>16</td></tr>
+                <tr><td>Learning Rate</td><td>3e-4</td></tr>
+                <tr><td>Dataset Size</td><td>10,000 instances</td></tr>
+                <tr><td>Train/Val Split</td><td>90/10 (stratified by family)</td></tr>
+            </table>
         </section>
 
         <section class="section">
             <h2>Results</h2>
-            <div class="placeholder">
-                <div class="placeholder-icon">📊</div>
-                <p><strong>Coming Soon</strong></p>
-                <p>Experimental results will be published after testing is complete.</p>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="number">~99%</div>
+                    <div class="label">Family Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">~99%</div>
+                    <div class="label">Operator F1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">~95%</div>
+                    <div class="label">Reasoning ROUGE-L</div>
+                </div>
             </div>
+            <p style="margin-top: 1.5rem;">
+                The T5-small model achieved near-perfect scores across all evaluation metrics after just 3 epochs of training
+                on the natural language dialect.
+            </p>
         </section>
 
         <section class="section">
             <h2>Analysis</h2>
-            <div class="placeholder">
-                <div class="placeholder-icon">🧪</div>
-                <p><strong>Pending</strong></p>
-                <p>In-depth analysis of results will be provided here.</p>
+            <div class="highlight" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left-color: #ef4444;">
+                <strong>⚠️ Critical Finding: Dataset Too Simple</strong>
+                <p style="margin-top: 0.5rem; margin-bottom: 0;">
+                    The near-perfect scores indicate that the current synthetic dataset does not provide a meaningful challenge
+                    for evaluating model capabilities. The task has become trivially solvable.
+                </p>
             </div>
+
+            <h3>Why Performance Is So High</h3>
+            <ul>
+                <li><strong>Templated patterns are easily memorizable:</strong> Each PDE family uses fixed natural language templates with only coefficient variation.</li>
+                <li><strong>Family-operator mapping is deterministic:</strong> The model can trivially learn the fixed mapping between families and their operator sets.</li>
+                <li><strong>Limited structural diversity:</strong> All instances within a family share identical structural reasoning patterns.</li>
+            </ul>
+
+            <h3>Implications</h3>
+            <p>
+                While high accuracy might seem positive, it actually undermines our research goal. We cannot draw meaningful conclusions
+                about representation effects if the baseline task is too easy. The model may be pattern-matching rather than genuinely
+                reasoning about PDE structure.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>Next Steps: Data Diversification</h2>
+            <p>
+                To create a more challenging and meaningful benchmark, we propose the following improvements to our data generation pipeline:
+            </p>
+
+            <h3>1. Template Variation</h3>
+            <ul>
+                <li>Generate multiple natural language phrasings per equation</li>
+                <li>Introduce synonym substitution and sentence restructuring</li>
+                <li>Add noise through paraphrasing</li>
+            </ul>
+
+            <h3>2. Structural Complexity</h3>
+            <ul>
+                <li>Include coupled PDE systems</li>
+                <li>Add boundary condition variations</li>
+                <li>Introduce source terms and forcing functions</li>
+            </ul>
+
+            <h3>3. Cross-Family Ambiguity</h3>
+            <ul>
+                <li>Generate edge cases that blur family boundaries</li>
+                <li>Include parameterized PDEs that transition between families</li>
+            </ul>
+
+            <h3>4. Coefficient Complexity</h3>
+            <ul>
+                <li>Use symbolic coefficients (e.g., α, β) instead of numeric values</li>
+                <li>Include coefficient relationships and constraints</li>
+            </ul>
+
+            <h3>5. Reasoning Depth</h3>
+            <ul>
+                <li>Require multi-step reasoning chains</li>
+                <li>Include intermediate derivation steps</li>
+            </ul>
         </section>
 
         <section class="section">
             <h2>Conclusion</h2>
-            <div class="placeholder">
-                <div class="placeholder-icon">✍️</div>
-                <p><strong>To Be Determined</strong></p>
-                <p>Conclusions will be drawn after experiments are completed.</p>
-            </div>
+            <p>
+                Our initial T5 baseline experiment revealed a critical insight: <strong>the current synthetic dataset is too simple</strong>
+                to serve as a meaningful benchmark for studying representation effects in PDE reasoning.
+            </p>
+            <p>
+                The near-perfect performance (~99% accuracy) across all metrics suggests that the model is exploiting surface-level
+                patterns rather than developing genuine structural understanding. This finding redirects our immediate focus toward
+                <strong>data diversification</strong> before proceeding with cross-dialect comparisons.
+            </p>
+            <p>
+                The next phase of our project will implement the proposed data generation improvements to create a dataset that
+                truly challenges model reasoning capabilities and enables meaningful comparison across symbolic representations.
+            </p>
         </section>
 
         <section class="section">

@@ -100,6 +100,67 @@ Evaluation proceeds along three primary dimensions. The most novel of these is R
 
 ---
 
+## Preliminary Results: T5 Baseline
+
+We conducted an initial baseline experiment using T5-small with natural language dialect input.
+
+### Experimental Setup
+
+| Parameter | Value |
+|-----------|-------|
+| Model | T5-small (60M params) |
+| Input Dialect | Natural Language |
+| Training Epochs | 3 |
+| Batch Size | 16 |
+| Learning Rate | 3e-4 |
+| Dataset Size | 10,000 instances |
+| Train/Val Split | 90/10 (stratified) |
+
+### Results
+
+| Metric | Score |
+|--------|-------|
+| Family Accuracy | ~99%+ |
+| Operator F1 | ~99%+ |
+| Reasoning ROUGE-L | ~95%+ |
+
+### Key Finding: Dataset Simplicity
+
+> ⚠️ **Critical Observation:** The model achieved near-perfect scores across all metrics, indicating that the current synthetic dataset is **too simple** to meaningfully evaluate model capabilities.
+
+The high performance suggests that:
+1. **Templated patterns are easily memorizable** — Each PDE family uses fixed natural language templates with only coefficient variation
+2. **Family-operator mapping is deterministic** — The model can trivially learn the fixed mapping between families and their operator sets
+3. **Limited structural diversity** — All instances within a family share identical structural reasoning patterns
+
+### Next Steps: Data Diversification
+
+To create a more challenging and meaningful benchmark, we propose the following data generation improvements:
+
+1. **Template Variation**
+   - Generate multiple natural language phrasings per equation
+   - Introduce synonym substitution and sentence restructuring
+   - Add noise through paraphrasing
+
+2. **Structural Complexity**
+   - Include coupled PDE systems
+   - Add boundary condition variations
+   - Introduce source terms and forcing functions
+
+3. **Cross-Family Ambiguity**
+   - Generate edge cases that blur family boundaries
+   - Include parameterized PDEs that transition between families
+
+4. **Coefficient Complexity**
+   - Use symbolic coefficients (e.g., $\alpha$, $\beta$) instead of numeric values
+   - Include coefficient relationships and constraints
+
+5. **Reasoning Depth**
+   - Require multi-step reasoning chains
+   - Include intermediate derivation steps
+
+---
+
 ## Expected Contributions
 
 - **A Controlled Benchmark:** Introduces a benchmark for studying representation effects in symbolic PDE reasoning, treating format as an empirical variable rather than a fixed engineering choice.
