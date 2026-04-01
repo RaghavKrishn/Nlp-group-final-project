@@ -1,0 +1,46 @@
+[
+  {
+    "family_accuracy": 1.0,
+    "operator_precision": 1.0,
+    "operator_recall": 1.0,
+    "operator_f1": 1.0,
+    "reasoning_rouge_l": 0.4448892249183455,
+    "trash_score": 0.0,
+    "trash_count": 0,
+    "n": 1000,
+    "dialect": "natural"
+  },
+  {
+    "family_accuracy": 1.0,
+    "operator_precision": 1.0,
+    "operator_recall": 1.0,
+    "operator_f1": 1.0,
+    "reasoning_rouge_l": 0.45659735883395924,
+    "trash_score": 0.0,
+    "trash_count": 0,
+    "n": 1000,
+    "dialect": "latex"
+  },
+  {
+    "family_accuracy": 1.0,
+    "operator_precision": 1.0,
+    "operator_recall": 1.0,
+    "operator_f1": 1.0,
+    "reasoning_rouge_l": 0.44924535927219855,
+    "trash_score": 0.0,
+    "trash_count": 0,
+    "n": 1000,
+    "dialect": "prefix"
+  },
+  {
+    "family_accuracy": 1.0,
+    "operator_precision": 1.0,
+    "operator_recall": 1.0,
+    "operator_f1": 1.0,
+    "reasoning_rouge_l": 0.45365990323555794,
+    "trash_score": 0.0,
+    "trash_count": 0,
+    "n": 1000,
+    "dialect": "postfix"
+  }
+]

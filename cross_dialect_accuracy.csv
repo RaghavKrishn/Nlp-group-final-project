@@ -1,0 +1,5 @@
+,natural,latex,prefix,postfix
+natural,100.0,20.0,20.0,20.0
+latex,0.0,100.0,0.0,0.0
+prefix,0.0,0.0,100.0,50.7
+postfix,3.9,44.8,49.5,100.0

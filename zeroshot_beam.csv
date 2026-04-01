@@ -1,0 +1,5 @@
+dialect,rouge_l,keyword_rate,top_family
+natural,0.25901394579922343,0.646,Advection
+latex,0.286449350649351,1.0,Wave
+prefix,0.24651671584229837,1.0,Wave
+postfix,0.23926786195755595,0.01,Advection
