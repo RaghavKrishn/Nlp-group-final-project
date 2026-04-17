@@ -1,4 +1,24 @@
 .venv/
-.venv/
 models/
 old_model_error/
+
+# HuggingFace / PyTorch checkpoints
+bart_pde_results/
+*/checkpoint-*
+
+# model files
+*.pt
+*.bin
+*.safetensors
+
+# training artifacts
+optimizer.pt
+scheduler.pt
+trainer_state.json
+
+# python cache
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
