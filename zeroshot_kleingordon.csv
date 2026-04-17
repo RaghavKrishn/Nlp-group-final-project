@@ -1,0 +1,5 @@
+dialect,rouge_l,keyword_rate,top_family
+natural,0.2675887380468739,0.998,Wave
+latex,0.19256436436062874,1.0,Burgers
+prefix,0.22044894046087884,1.0,Wave
+postfix,0.1473691126692225,1.0,Advection

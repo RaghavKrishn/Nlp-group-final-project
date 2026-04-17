@@ -1,0 +1,5 @@
+dialect,rouge_l,keyword_rate,top_family
+natural,0.2604558287723881,0.98,Heat
+latex,0.2386004407376267,1.0,Heat
+prefix,0.26071402864906634,1.0,Burgers
+postfix,0.21974805410826606,1.0,Heat
