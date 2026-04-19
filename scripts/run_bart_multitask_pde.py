@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import inspect
 import json
+import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -120,6 +121,20 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Ignore any existing checkpoint under output-root and retrain from scratch.",
     )
+    parser.add_argument(
+        "--skip-train",
+        action="store_true",
+        help=(
+            "Skip fine-tuning and evaluate the pretrained BART backbone directly. "
+            "The multitask heads remain randomly initialized, so this is a sanity-check baseline."
+        ),
+    )
+    parser.add_argument(
+        "--device",
+        choices=("auto", "cpu", "cuda", "mps"),
+        default="auto",
+        help="Execution device. Use cpu to avoid Apple MPS issues during evaluation.",
+    )
     return parser.parse_args()
 
 
@@ -223,6 +238,19 @@ def choose_device(torch_module) -> str:
     if getattr(torch_module.backends, "mps", None) and torch_module.backends.mps.is_available():
         return "mps"
     return "cpu"
+
+
+def resolve_device(args: argparse.Namespace, torch_module) -> str:
+    if args.device != "auto":
+        return args.device
+    return choose_device(torch_module)
+
+
+def set_random_seed(seed: int, torch_module) -> None:
+    random.seed(seed)
+    torch_module.manual_seed(seed)
+    if torch_module.cuda.is_available():
+        torch_module.cuda.manual_seed_all(seed)
 
 
 def format_input_text(text: str, dialect: str, args: argparse.Namespace) -> str:
@@ -635,6 +663,8 @@ def main() -> None:
     output_dir_name = (
         f"{args.train_mode}_{args.train_dialect}" if args.train_mode == "single" else "mixed"
     )
+    if args.skip_train:
+        output_dir_name = f"{output_dir_name}_no_fine_tune"
     output_root = Path(args.output_root) / args.split_mode / output_dir_name
     output_root.mkdir(parents=True, exist_ok=True)
 
@@ -648,13 +678,18 @@ def main() -> None:
             }
         )
 
-    train_dataset = PDEMultitaskDataset(train_examples, tokenizer, args.max_input_length)
-    val_dataset = PDEMultitaskDataset(val_examples, tokenizer, args.max_input_length)
-
-    device = choose_device(torch)
+    device = resolve_device(args, torch)
     print(f"Training device: {device}")
+    set_random_seed(args.seed, torch)
 
-    checkpoint = find_latest_checkpoint(output_root) if not args.force_retrain else None
+    train_dataset = None
+    val_dataset = None
+
+    checkpoint = (
+        find_latest_checkpoint(output_root)
+        if not args.force_retrain and not args.skip_train
+        else None
+    )
     if checkpoint is not None:
         print(f"Loading checkpoint: {checkpoint}")
         model = BartPDEMultitaskClassifier.from_pretrained(checkpoint)
@@ -664,20 +699,29 @@ def main() -> None:
     else:
         model = BartPDEMultitaskClassifier.from_pretrained(args.model_name)
         model.resize_token_embeddings(len(tokenizer))
-        training_args = make_training_arguments(args, output_root, stack, device)
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=val_dataset,
-        )
-        trainer.train()
-        trainer.save_model(str(output_root))
-        tokenizer.save_pretrained(str(output_root))
+        if args.skip_train:
+            print(
+                "Skipping fine-tuning. Evaluating the pretrained BART backbone with "
+                "randomly initialized multitask heads."
+            )
+        else:
+            train_dataset = PDEMultitaskDataset(train_examples, tokenizer, args.max_input_length)
+            val_dataset = PDEMultitaskDataset(val_examples, tokenizer, args.max_input_length)
+            training_args = make_training_arguments(args, output_root, stack, device)
+            trainer = Trainer(
+                model=model,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=val_dataset,
+            )
+            trainer.train()
+            trainer.save_model(str(output_root))
+            tokenizer.save_pretrained(str(output_root))
 
     val_metrics = {}
     test_metrics = {}
     for dialect in args.eval_dialects:
+        print(f"Running evaluation for dialect={dialect}")
         val_eval_examples = build_examples(
             val_data,
             train_mode="single",

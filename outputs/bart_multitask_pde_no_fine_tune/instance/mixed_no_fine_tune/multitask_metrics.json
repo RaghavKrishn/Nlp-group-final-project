@@ -1,0 +1,130 @@
+{
+  "config": {
+    "dataset": "varied_data_generation/dataset.jsonl",
+    "output_root": "outputs/bart_multitask_pde_no_fine_tune",
+    "model_name": "facebook/bart-base",
+    "train_mode": "mixed",
+    "train_dialect": "natural",
+    "eval_dialects": [
+      "natural",
+      "latex",
+      "prefix",
+      "postfix"
+    ],
+    "split_mode": "instance",
+    "families": null,
+    "train_fraction": 0.8,
+    "val_fraction": 0.1,
+    "test_fraction": 0.1,
+    "seed": 42,
+    "batch_size": 16,
+    "num_epochs": 4,
+    "learning_rate": 0.0002,
+    "max_input_length": 160,
+    "operator_loss_weight": 0.35,
+    "structure_loss_weight": 0.15,
+    "no_dialect_token": true,
+    "task_prefix": "classify PDE family and infer structure:",
+    "report_only": false,
+    "force_retrain": false,
+    "skip_train": true
+  },
+  "family_vocab": {
+    "0": "Advection",
+    "1": "Burgers",
+    "2": "Heat",
+    "3": "Laplace",
+    "4": "Wave"
+  },
+  "operator_vocab": [
+    "cos",
+    "exp",
+    "polynomial",
+    "sin",
+    "tanh"
+  ],
+  "val_metrics": {
+    "natural": {
+      "family_accuracy": 0.23,
+      "operator_micro_f1": 0.44638491093258825,
+      "time_order_accuracy": 0.191,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.533,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.3448
+    },
+    "latex": {
+      "family_accuracy": 0.038,
+      "operator_micro_f1": 0.33333333333333337,
+      "time_order_accuracy": 0.2,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.8,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.4
+    },
+    "prefix": {
+      "family_accuracy": 0.2,
+      "operator_micro_f1": 0.4052684903748734,
+      "time_order_accuracy": 0.2,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.8,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.4
+    },
+    "postfix": {
+      "family_accuracy": 0.15,
+      "operator_micro_f1": 0.4848484848484849,
+      "time_order_accuracy": 0.2,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.8,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.4
+    }
+  },
+  "test_metrics": {
+    "natural": {
+      "family_accuracy": 0.23,
+      "operator_micro_f1": 0.444794952681388,
+      "time_order_accuracy": 0.193,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.515,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.3416
+    },
+    "latex": {
+      "family_accuracy": 0.042,
+      "operator_micro_f1": 0.3349101229895932,
+      "time_order_accuracy": 0.2,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.8,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.4
+    },
+    "prefix": {
+      "family_accuracy": 0.2,
+      "operator_micro_f1": 0.4047900151796256,
+      "time_order_accuracy": 0.2,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.8,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.4
+    },
+    "postfix": {
+      "family_accuracy": 0.134,
+      "operator_micro_f1": 0.4848484848484849,
+      "time_order_accuracy": 0.2,
+      "first_spatial_accuracy": 0.6,
+      "second_spatial_accuracy": 0.2,
+      "nonlinear_accuracy": 0.8,
+      "spatial_var_accuracy": 0.2,
+      "structure_accuracy": 0.4
+    }
+  }
+}
