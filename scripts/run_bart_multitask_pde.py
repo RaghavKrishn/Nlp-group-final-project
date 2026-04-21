@@ -130,6 +130,14 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--freeze-backbone",
+        action="store_true",
+        help=(
+            "Freeze the pretrained BART backbone and train only the multitask heads. "
+            "This is a head-only baseline: no backbone fine-tuning, but the task heads still learn."
+        ),
+    )
+    parser.add_argument(
         "--device",
         choices=("auto", "cpu", "cuda", "mps"),
         default="auto",
@@ -144,7 +152,13 @@ def parse_args() -> argparse.Namespace:
             "Useful for held-out families such as Beam, KleinGordon, or ReactionDiffusion."
         ),
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.skip_train and args.freeze_backbone:
+        raise SystemExit(
+            "--skip-train and --freeze-backbone are mutually exclusive. "
+            "Use --skip-train for evaluation-only, or --freeze-backbone for head-only training."
+        )
+    return args
 
 
 def split_dataset(data: list[dict], args: argparse.Namespace) -> tuple[list[dict], list[dict], list[dict]]:
@@ -331,6 +345,17 @@ def compute_micro_f1(predicted: list[list[int]], gold: list[list[int]]) -> float
     if precision + recall == 0:
         return 0.0
     return 2 * precision * recall / (precision + recall)
+
+
+def freeze_bart_backbone(model) -> None:
+    for parameter in model.model.parameters():
+        parameter.requires_grad = False
+
+
+def count_parameters(model) -> tuple[int, int]:
+    total = sum(parameter.numel() for parameter in model.parameters())
+    trainable = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+    return trainable, total
 
 
 def make_training_arguments(args: argparse.Namespace, output_dir: Path, stack: dict, device: str):
@@ -726,6 +751,8 @@ def main() -> None:
     )
     if args.skip_train:
         output_dir_name = f"{output_dir_name}_no_fine_tune"
+    elif args.freeze_backbone:
+        output_dir_name = f"{output_dir_name}_frozen_backbone"
     output_root = Path(args.output_root) / args.split_mode / output_dir_name
     output_root.mkdir(parents=True, exist_ok=True)
 
@@ -757,6 +784,8 @@ def main() -> None:
         tokenizer = BartTokenizer.from_pretrained(
             tokenizer_source_for_output(output_root, args.model_name)
         )
+        if args.freeze_backbone:
+            freeze_bart_backbone(model)
     else:
         model = BartPDEMultitaskClassifier.from_pretrained(args.model_name)
         model.resize_token_embeddings(len(tokenizer))
@@ -766,6 +795,17 @@ def main() -> None:
                 "randomly initialized multitask heads."
             )
         else:
+            if args.freeze_backbone:
+                freeze_bart_backbone(model)
+                print("Freezing the pretrained BART backbone and training only the multitask heads.")
+
+            trainable_params, total_params = count_parameters(model)
+            print(
+                "Parameter counts: "
+                f"trainable={trainable_params:,} / total={total_params:,} "
+                f"({trainable_params / total_params:.2%} trainable)"
+            )
+
             train_dataset = PDEMultitaskDataset(train_examples, tokenizer, args.max_input_length)
             val_dataset = PDEMultitaskDataset(val_examples, tokenizer, args.max_input_length)
             training_args = make_training_arguments(args, output_root, stack, device)
