@@ -1,0 +1,13 @@
+accelerate>=1.1.0
+datasets
+evaluate
+matplotlib
+numpy
+pandas
+python-pptx
+rouge_score
+scikit-learn
+sentencepiece
+sympy
+torch
+transformers[torch]
