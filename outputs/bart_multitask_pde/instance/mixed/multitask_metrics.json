@@ -1,0 +1,523 @@
+{
+  "config": {
+    "dataset": "varied_data_generation/dataset.jsonl",
+    "output_root": "outputs/bart_multitask_pde",
+    "model_name": "facebook/bart-base",
+    "train_mode": "mixed",
+    "train_dialect": "natural",
+    "eval_dialects": [
+      "natural",
+      "latex",
+      "prefix",
+      "postfix"
+    ],
+    "split_mode": "instance",
+    "families": null,
+    "train_fraction": 0.8,
+    "val_fraction": 0.1,
+    "test_fraction": 0.1,
+    "seed": 42,
+    "batch_size": 16,
+    "num_epochs": 4,
+    "learning_rate": 0.0002,
+    "max_input_length": 160,
+    "operator_loss_weight": 0.35,
+    "structure_loss_weight": 0.15,
+    "no_dialect_token": false,
+    "task_prefix": "classify PDE family and infer structure:",
+    "report_only": false,
+    "force_retrain": false,
+    "skip_train": false,
+    "device": "mps",
+    "held_out_datasets": [
+      "varied_data_generation/held_out_beam.jsonl",
+      "varied_data_generation/held_out_dataset.jsonl",
+      "varied_data_generation/held_out_kleingordon.jsonl",
+      "varied_data_generation/held_out_reactiondiffusion.jsonl"
+    ]
+  },
+  "family_vocab": {
+    "0": "Advection",
+    "1": "Burgers",
+    "2": "Heat",
+    "3": "Laplace",
+    "4": "Wave"
+  },
+  "operator_vocab": [
+    "cos",
+    "exp",
+    "polynomial",
+    "sin",
+    "tanh"
+  ],
+  "val_metrics": {
+    "natural": {
+      "family_accuracy": 1.0,
+      "operator_micro_f1": 1.0,
+      "time_order_accuracy": 1.0,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 1.0,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Advection",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.2,
+        "Laplace": 0.2,
+        "Wave": 0.2
+      }
+    },
+    "latex": {
+      "family_accuracy": 1.0,
+      "operator_micro_f1": 1.0,
+      "time_order_accuracy": 1.0,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 1.0,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Advection",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.2,
+        "Laplace": 0.2,
+        "Wave": 0.2
+      }
+    },
+    "prefix": {
+      "family_accuracy": 1.0,
+      "operator_micro_f1": 1.0,
+      "time_order_accuracy": 1.0,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 1.0,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Advection",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.2,
+        "Laplace": 0.2,
+        "Wave": 0.2
+      }
+    },
+    "postfix": {
+      "family_accuracy": 1.0,
+      "operator_micro_f1": 1.0,
+      "time_order_accuracy": 1.0,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 1.0,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Advection",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.2,
+        "Laplace": 0.2,
+        "Wave": 0.2
+      }
+    }
+  },
+  "test_metrics": {
+    "natural": {
+      "family_accuracy": 1.0,
+      "operator_micro_f1": 1.0,
+      "time_order_accuracy": 1.0,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 1.0,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Advection",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.2,
+        "Laplace": 0.2,
+        "Wave": 0.2
+      }
+    },
+    "latex": {
+      "family_accuracy": 1.0,
+      "operator_micro_f1": 1.0,
+      "time_order_accuracy": 1.0,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 1.0,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Advection",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.2,
+        "Laplace": 0.2,
+        "Wave": 0.2
+      }
+    },
+    "prefix": {
+      "family_accuracy": 1.0,
+      "operator_micro_f1": 1.0,
+      "time_order_accuracy": 1.0,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 1.0,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Advection",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.2,
+        "Laplace": 0.2,
+        "Wave": 0.2
+      }
+    },
+    "postfix": {
+      "family_accuracy": 0.998,
+      "operator_micro_f1": 0.9988457098884186,
+      "time_order_accuracy": 0.998,
+      "first_spatial_accuracy": 1.0,
+      "second_spatial_accuracy": 1.0,
+      "nonlinear_accuracy": 1.0,
+      "spatial_var_accuracy": 1.0,
+      "structure_accuracy": 0.9996,
+      "family_accuracy_support": 1000,
+      "top_predicted_family": "Heat",
+      "predicted_family_distribution": {
+        "Advection": 0.2,
+        "Burgers": 0.2,
+        "Heat": 0.202,
+        "Laplace": 0.2,
+        "Wave": 0.198
+      }
+    }
+  },
+  "held_out_metrics": {
+    "held_out_beam": {
+      "natural": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.4,
+        "time_order_accuracy": 0.0,
+        "first_spatial_accuracy": 0.0,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 1.0,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.6,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Advection",
+        "predicted_family_distribution": {
+          "Advection": 1.0,
+          "Burgers": 0.0,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.0
+        }
+      },
+      "latex": {
+        "family_accuracy": null,
+        "operator_micro_f1": 1.0,
+        "time_order_accuracy": 1.0,
+        "first_spatial_accuracy": 1.0,
+        "second_spatial_accuracy": 0.0,
+        "nonlinear_accuracy": 1.0,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.8,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Wave",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 0.0,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 1.0
+        }
+      },
+      "prefix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.4,
+        "time_order_accuracy": 0.0,
+        "first_spatial_accuracy": 0.0,
+        "second_spatial_accuracy": 0.0,
+        "nonlinear_accuracy": 0.0,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.2,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Burgers",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 1.0,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.0
+        }
+      },
+      "postfix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.4,
+        "time_order_accuracy": 0.0,
+        "first_spatial_accuracy": 0.0,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 1.0,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.6,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Advection",
+        "predicted_family_distribution": {
+          "Advection": 1.0,
+          "Burgers": 0.0,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.0
+        }
+      }
+    },
+    "held_out_dataset": {
+      "natural": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.6519838056680161,
+        "time_order_accuracy": 0.175,
+        "first_spatial_accuracy": 0.6455,
+        "second_spatial_accuracy": 0.813,
+        "nonlinear_accuracy": 0.838,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.6942999999999999,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Heat",
+        "predicted_family_distribution": {
+          "Advection": 0.191,
+          "Burgers": 0.162,
+          "Heat": 0.472,
+          "Laplace": 0.0,
+          "Wave": 0.175
+        }
+      },
+      "latex": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.8290208016235414,
+        "time_order_accuracy": 0.8985,
+        "first_spatial_accuracy": 0.961,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 0.961,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.9640999999999998,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Wave",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 0.039,
+          "Heat": 0.0625,
+          "Laplace": 0.0,
+          "Wave": 0.8985
+        }
+      },
+      "prefix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.3443004320372217,
+        "time_order_accuracy": 0.018,
+        "first_spatial_accuracy": 0.018,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 0.018,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.41080000000000005,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Burgers",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 0.982,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.018
+        }
+      },
+      "postfix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.6625726141078838,
+        "time_order_accuracy": 0.037,
+        "first_spatial_accuracy": 0.565,
+        "second_spatial_accuracy": 0.595,
+        "nonlinear_accuracy": 0.971,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.6336,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Heat",
+        "predicted_family_distribution": {
+          "Advection": 0.405,
+          "Burgers": 0.03,
+          "Heat": 0.528,
+          "Laplace": 0.0,
+          "Wave": 0.037
+        }
+      }
+    },
+    "held_out_kleingordon": {
+      "natural": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.6510349288486417,
+        "time_order_accuracy": 0.184,
+        "first_spatial_accuracy": 0.651,
+        "second_spatial_accuracy": 0.826,
+        "nonlinear_accuracy": 0.829,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.6980000000000001,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Heat",
+        "predicted_family_distribution": {
+          "Advection": 0.177,
+          "Burgers": 0.171,
+          "Heat": 0.468,
+          "Laplace": 0.0,
+          "Wave": 0.184
+        }
+      },
+      "latex": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.8281861678990864,
+        "time_order_accuracy": 0.897,
+        "first_spatial_accuracy": 0.959,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 0.959,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.9629999999999999,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Wave",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 0.041,
+          "Heat": 0.062,
+          "Laplace": 0.0,
+          "Wave": 0.897
+        }
+      },
+      "prefix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.3412606020289373,
+        "time_order_accuracy": 0.013,
+        "first_spatial_accuracy": 0.013,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 0.013,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.40779999999999994,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Burgers",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 0.987,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.013
+        }
+      },
+      "postfix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.6651201325600664,
+        "time_order_accuracy": 0.043,
+        "first_spatial_accuracy": 0.588,
+        "second_spatial_accuracy": 0.616,
+        "nonlinear_accuracy": 0.972,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.6437999999999999,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Heat",
+        "predicted_family_distribution": {
+          "Advection": 0.384,
+          "Burgers": 0.028,
+          "Heat": 0.545,
+          "Laplace": 0.0,
+          "Wave": 0.043
+        }
+      }
+    },
+    "held_out_reactiondiffusion": {
+      "natural": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.7242654212881883,
+        "time_order_accuracy": 0.861,
+        "first_spatial_accuracy": 0.139,
+        "second_spatial_accuracy": 0.642,
+        "nonlinear_accuracy": 0.503,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.629,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Burgers",
+        "predicted_family_distribution": {
+          "Advection": 0.358,
+          "Burgers": 0.503,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.139
+        }
+      },
+      "latex": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.8,
+        "time_order_accuracy": 1.0,
+        "first_spatial_accuracy": 0.0,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 1.0,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.8,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Burgers",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 1.0,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.0
+        }
+      },
+      "prefix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.8,
+        "time_order_accuracy": 1.0,
+        "first_spatial_accuracy": 0.0,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 1.0,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.8,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Burgers",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 1.0,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.0
+        }
+      },
+      "postfix": {
+        "family_accuracy": null,
+        "operator_micro_f1": 0.8,
+        "time_order_accuracy": 1.0,
+        "first_spatial_accuracy": 0.0,
+        "second_spatial_accuracy": 1.0,
+        "nonlinear_accuracy": 1.0,
+        "spatial_var_accuracy": 1.0,
+        "structure_accuracy": 0.8,
+        "family_accuracy_support": 0,
+        "top_predicted_family": "Burgers",
+        "predicted_family_distribution": {
+          "Advection": 0.0,
+          "Burgers": 1.0,
+          "Heat": 0.0,
+          "Laplace": 0.0,
+          "Wave": 0.0
+        }
+      }
+    }
+  }
+}

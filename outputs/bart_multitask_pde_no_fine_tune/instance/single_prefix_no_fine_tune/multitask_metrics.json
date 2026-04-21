@@ -3,8 +3,8 @@
     "dataset": "varied_data_generation/dataset.jsonl",
     "output_root": "outputs/bart_multitask_pde_no_fine_tune",
     "model_name": "facebook/bart-base",
-    "train_mode": "mixed",
-    "train_dialect": "natural",
+    "train_mode": "single",
+    "train_dialect": "prefix",
     "eval_dialects": [
       "natural",
       "latex",

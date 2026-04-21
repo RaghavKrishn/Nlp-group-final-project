@@ -135,6 +135,15 @@ def parse_args() -> argparse.Namespace:
         default="auto",
         help="Execution device. Use cpu to avoid Apple MPS issues during evaluation.",
     )
+    parser.add_argument(
+        "--held-out-datasets",
+        nargs="*",
+        default=[],
+        help=(
+            "Optional extra JSONL datasets to evaluate after the standard val/test split. "
+            "Useful for held-out families such as Beam, KleinGordon, or ReactionDiffusion."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -271,12 +280,18 @@ def build_examples(
     family2id: dict[str, int],
     operator2id: dict[str, int],
     single_dialect: str | None = None,
+    allow_unknown_families: bool = False,
 ) -> list[dict[str, Any]]:
     selected_dialects = dialects if train_mode == "mixed" else [single_dialect or args.train_dialect]
     examples: list[dict[str, Any]] = []
 
     for instance in instances:
         family = instance["labels"]["behavioral"]
+        if family not in family2id and not allow_unknown_families:
+            raise KeyError(
+                f"Family '{family}' is not in the training label space. "
+                "Use allow_unknown_families=True for held-out evaluation."
+            )
         structure = derive_structure_targets(instance)
         operator_targets = [0.0] * len(operator2id)
         for operator in instance["labels"]["operators"]:
@@ -287,7 +302,8 @@ def build_examples(
                 {
                     "text": format_input_text(instance["dialects"][dialect], dialect, args),
                     "dialect": dialect,
-                    "family_label": family2id[family],
+                    "family_label": family2id.get(family, -100),
+                    "family_name": family,
                     "operator_labels": operator_targets,
                     "time_order_label": structure["time_order"],
                     "first_spatial_label": float(structure["has_first_spatial"]),
@@ -335,6 +351,12 @@ def make_training_arguments(args: argparse.Namespace, output_dir: Path, stack: d
         "save_total_limit": 1,
     }
 
+    if "use_cpu" in signature:
+        kwargs["use_cpu"] = device == "cpu"
+
+    if "use_mps_device" in signature:
+        kwargs["use_mps_device"] = device == "mps"
+
     if "evaluation_strategy" in signature:
         kwargs["evaluation_strategy"] = "epoch"
     elif "eval_strategy" in signature:
@@ -349,6 +371,9 @@ def make_training_arguments(args: argparse.Namespace, output_dir: Path, stack: d
     if "fp16" in signature:
         kwargs["fp16"] = device == "cuda"
 
+    if "dataloader_pin_memory" in signature:
+        kwargs["dataloader_pin_memory"] = device == "cuda"
+
     return TrainingArguments(**kwargs)
 
 
@@ -360,20 +385,29 @@ def make_eval_arguments(output_dir: Path, stack: dict, device: str, batch_size: 
         "per_device_eval_batch_size": batch_size,
         "report_to": "none",
     }
+    if "use_cpu" in signature:
+        kwargs["use_cpu"] = device == "cpu"
+    if "use_mps_device" in signature:
+        kwargs["use_mps_device"] = device == "mps"
     if "fp16" in signature:
         kwargs["fp16"] = device == "cuda"
+    if "dataloader_pin_memory" in signature:
+        kwargs["dataloader_pin_memory"] = device == "cuda"
     return TrainingArguments(**kwargs)
 
 
 @dataclass
 class MetricBundle:
-    family_accuracy: float
+    family_accuracy: float | None
     operator_micro_f1: float
     time_order_accuracy: float
     first_spatial_accuracy: float
     second_spatial_accuracy: float
     nonlinear_accuracy: float
     spatial_var_accuracy: float
+    family_accuracy_support: int | None = None
+    top_predicted_family: str | None = None
+    predicted_family_distribution: dict[str, float] | None = None
 
     @property
     def structure_accuracy(self) -> float:
@@ -385,8 +419,8 @@ class MetricBundle:
             + self.spatial_var_accuracy
         ) / 5.0
 
-    def to_dict(self) -> dict[str, float]:
-        return {
+    def to_dict(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
             "family_accuracy": self.family_accuracy,
             "operator_micro_f1": self.operator_micro_f1,
             "time_order_accuracy": self.time_order_accuracy,
@@ -396,6 +430,13 @@ class MetricBundle:
             "spatial_var_accuracy": self.spatial_var_accuracy,
             "structure_accuracy": self.structure_accuracy,
         }
+        if self.family_accuracy_support is not None:
+            payload["family_accuracy_support"] = self.family_accuracy_support
+        if self.top_predicted_family is not None:
+            payload["top_predicted_family"] = self.top_predicted_family
+        if self.predicted_family_distribution is not None:
+            payload["predicted_family_distribution"] = self.predicted_family_distribution
+        return payload
 
 
 def main() -> None:
@@ -598,6 +639,7 @@ def main() -> None:
         model.to(device)
 
         family_correct = 0
+        family_total = 0
         time_order_correct = 0
         first_spatial_correct = 0
         second_spatial_correct = 0
@@ -606,6 +648,7 @@ def main() -> None:
 
         operator_pred_rows: list[list[int]] = []
         operator_gold_rows: list[list[int]] = []
+        predicted_family_counts = {family: 0 for family in id2family.values()}
 
         with torch.no_grad():
             for batch in dataloader:
@@ -616,7 +659,16 @@ def main() -> None:
                 )
 
                 family_pred = outputs["logits"].argmax(dim=-1)
-                family_correct += int((family_pred == batch["labels"]).sum().item())
+                for pred_idx in family_pred.cpu().tolist():
+                    predicted_family_counts[id2family[pred_idx]] += 1
+                valid_family_mask = batch["labels"] >= 0
+                family_total += int(valid_family_mask.sum().item())
+                if valid_family_mask.any():
+                    family_correct += int(
+                        (family_pred[valid_family_mask] == batch["labels"][valid_family_mask])
+                        .sum()
+                        .item()
+                    )
 
                 time_order_pred = outputs["time_order_logits"].argmax(dim=-1)
                 time_order_correct += int(
@@ -650,14 +702,23 @@ def main() -> None:
                 operator_gold_rows.extend(batch["operator_labels"].long().cpu().tolist())
 
         n = len(dataset)
+        top_predicted_family = max(
+            predicted_family_counts, key=predicted_family_counts.get
+        )
+        predicted_family_distribution = {
+            family: count / n for family, count in predicted_family_counts.items()
+        }
         return MetricBundle(
-            family_accuracy=family_correct / n,
+            family_accuracy=(family_correct / family_total) if family_total else None,
             operator_micro_f1=compute_micro_f1(operator_pred_rows, operator_gold_rows),
             time_order_accuracy=time_order_correct / n,
             first_spatial_accuracy=first_spatial_correct / n,
             second_spatial_accuracy=second_spatial_correct / n,
             nonlinear_accuracy=nonlinear_correct / n,
             spatial_var_accuracy=spatial_var_correct / n,
+            family_accuracy_support=family_total,
+            top_predicted_family=top_predicted_family,
+            predicted_family_distribution=predicted_family_distribution,
         )
 
     output_dir_name = (
@@ -743,12 +804,58 @@ def main() -> None:
         val_metrics[dialect] = evaluate_examples(model, tokenizer, val_eval_examples).to_dict()
         test_metrics[dialect] = evaluate_examples(model, tokenizer, test_eval_examples).to_dict()
 
+        family_acc = test_metrics[dialect]["family_accuracy"]
+        family_acc_text = f"{family_acc:.2%}" if family_acc is not None else "n/a"
         print(
             f"Eval on {dialect.upper():7s} | "
-            f"family_acc={test_metrics[dialect]['family_accuracy']:.2%} | "
+            f"family_acc={family_acc_text} | "
             f"operator_f1={test_metrics[dialect]['operator_micro_f1']:.2%} | "
             f"structure_acc={test_metrics[dialect]['structure_accuracy']:.2%}"
         )
+
+    held_out_metrics: dict[str, dict[str, dict[str, Any]]] = {}
+    for held_out_path in args.held_out_datasets:
+        held_out_name = Path(held_out_path).stem
+        held_out_data = load_jsonl(held_out_path)
+        unseen_families = sorted(
+            {
+                instance["labels"]["behavioral"]
+                for instance in held_out_data
+                if instance["labels"]["behavioral"] not in family2id
+            }
+        )
+        if unseen_families:
+            print(
+                f"Held-out dataset {held_out_name} contains unseen families {unseen_families}. "
+                "Family accuracy will be reported as n/a for those examples."
+            )
+
+        held_out_metrics[held_out_name] = {}
+        for dialect in args.eval_dialects:
+            held_out_examples = build_examples(
+                held_out_data,
+                train_mode="single",
+                dialects=[dialect],
+                args=args,
+                family2id=family2id,
+                operator2id=operator2id,
+                single_dialect=dialect,
+                allow_unknown_families=True,
+            )
+            held_out_result = evaluate_examples(model, tokenizer, held_out_examples).to_dict()
+            held_out_metrics[held_out_name][dialect] = held_out_result
+
+            held_out_family_acc = held_out_result["family_accuracy"]
+            held_out_family_text = (
+                f"{held_out_family_acc:.2%}" if held_out_family_acc is not None else "n/a"
+            )
+            print(
+                f"Held-out {held_out_name:24s} | dialect={dialect.upper():7s} | "
+                f"family_acc={held_out_family_text} | "
+                f"operator_f1={held_out_result['operator_micro_f1']:.2%} | "
+                f"structure_acc={held_out_result['structure_accuracy']:.2%} | "
+                f"top_family={held_out_result['top_predicted_family']}"
+            )
 
     summary = {
         "config": vars(args),
@@ -757,6 +864,8 @@ def main() -> None:
         "val_metrics": val_metrics,
         "test_metrics": test_metrics,
     }
+    if held_out_metrics:
+        summary["held_out_metrics"] = held_out_metrics
     summary_path = output_root / "multitask_metrics.json"
     summary_path.write_text(json.dumps(summary, indent=2))
     print(f"Saved multitask metrics to {summary_path}")

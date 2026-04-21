@@ -4,6 +4,7 @@ import argparse
 import csv
 import inspect
 import json
+import random
 from pathlib import Path
 
 from dialect_utils import (
@@ -73,6 +74,12 @@ def parse_args() -> argparse.Namespace:
         help="After in-dialect evaluation, run the full train-dialect x test-dialect matrix.",
     )
     parser.add_argument(
+        "--cross-eval-split",
+        choices=("val", "test"),
+        default="test",
+        help="Which split to use when building the cross-dialect accuracy matrix.",
+    )
+    parser.add_argument(
         "--report-only",
         action="store_true",
         help="Only print split/leakage diagnostics; do not import transformers or train models.",
@@ -81,6 +88,12 @@ def parse_args() -> argparse.Namespace:
         "--force-retrain",
         action="store_true",
         help="Ignore any existing checkpoints under output-root and retrain from scratch.",
+    )
+    parser.add_argument(
+        "--device",
+        choices=("auto", "cpu", "cuda", "mps"),
+        default="auto",
+        help="Execution device. Use cpu to avoid Apple MPS issues during evaluation.",
     )
     return parser.parse_args()
 
@@ -91,6 +104,19 @@ def choose_device(torch_module) -> str:
     if getattr(torch_module.backends, "mps", None) and torch_module.backends.mps.is_available():
         return "mps"
     return "cpu"
+
+
+def resolve_device(args: argparse.Namespace, torch_module) -> str:
+    if args.device != "auto":
+        return args.device
+    return choose_device(torch_module)
+
+
+def set_random_seed(seed: int, torch_module) -> None:
+    random.seed(seed)
+    torch_module.manual_seed(seed)
+    if torch_module.cuda.is_available():
+        torch_module.cuda.manual_seed_all(seed)
 
 
 def split_dataset(data: list[dict], args: argparse.Namespace) -> tuple[list[dict], list[dict], list[dict]]:
@@ -206,6 +232,12 @@ def make_training_arguments(args: argparse.Namespace, output_dir: Path, stack: d
         "seed": args.seed,
     }
 
+    if "use_cpu" in signature:
+        kwargs["use_cpu"] = device == "cpu"
+
+    if "use_mps_device" in signature:
+        kwargs["use_mps_device"] = device == "mps"
+
     if "evaluation_strategy" in signature:
         kwargs["evaluation_strategy"] = "epoch"
     elif "eval_strategy" in signature:
@@ -220,6 +252,9 @@ def make_training_arguments(args: argparse.Namespace, output_dir: Path, stack: d
     if "fp16" in signature:
         kwargs["fp16"] = device == "cuda"
 
+    if "dataloader_pin_memory" in signature:
+        kwargs["dataloader_pin_memory"] = device == "cuda"
+
     return TrainingArguments(**kwargs)
 
 
@@ -231,8 +266,14 @@ def make_eval_arguments(output_dir: Path, stack: dict, device: str, batch_size: 
         "per_device_eval_batch_size": batch_size,
         "report_to": "none",
     }
+    if "use_cpu" in signature:
+        kwargs["use_cpu"] = device == "cpu"
+    if "use_mps_device" in signature:
+        kwargs["use_mps_device"] = device == "mps"
     if "fp16" in signature:
         kwargs["fp16"] = device == "cuda"
+    if "dataloader_pin_memory" in signature:
+        kwargs["dataloader_pin_memory"] = device == "cuda"
     return TrainingArguments(**kwargs)
 
 
@@ -287,8 +328,9 @@ def main() -> None:
     DataCollatorWithPadding = stack["DataCollatorWithPadding"]
     torch = stack["torch"]
 
-    device = choose_device(torch)
+    device = resolve_device(args, torch)
     print(f"Training device: {device}")
+    set_random_seed(args.seed, torch)
 
     families = sorted({instance["labels"]["behavioral"] for instance in data})
     label2id = {family: idx for idx, family in enumerate(families)}
@@ -389,6 +431,9 @@ def main() -> None:
     if not args.cross_eval:
         return
 
+    cross_eval_data = val_data if args.cross_eval_split == "val" else test_data
+    print(f"\nCross-dialect matrix split: {args.cross_eval_split}")
+
     accuracy_matrix: dict[str, dict[str, float]] = {
         train_dialect: {} for train_dialect in args.dialects
     }
@@ -417,7 +462,7 @@ def main() -> None:
 
         print(f"\nCross-evaluating model trained on {train_dialect.upper()}")
         for test_dialect in args.dialects:
-            test_dataset = Dataset.from_dict(preprocess(test_data, test_dialect)).map(
+            test_dataset = Dataset.from_dict(preprocess(cross_eval_data, test_dialect)).map(
                 tokenize_for_eval,
                 batched=True,
                 remove_columns=["text", "label"],
@@ -429,7 +474,12 @@ def main() -> None:
             accuracy_matrix[train_dialect][test_dialect] = round(accuracy * 100, 1)
             print(f"  tested_on={test_dialect:7s}  acc={accuracy:.1%}")
 
-    accuracy_path = output_root / "cross_dialect_accuracy.csv"
+    accuracy_filename = (
+        "cross_dialect_accuracy.csv"
+        if args.cross_eval_split == "test"
+        else f"cross_dialect_accuracy_{args.cross_eval_split}.csv"
+    )
+    accuracy_path = output_root / accuracy_filename
     save_matrix(accuracy_path, accuracy_matrix, args.dialects)
     print(f"\nSaved cross-dialect accuracy to {accuracy_path}")
 
