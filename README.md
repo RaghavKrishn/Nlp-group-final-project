@@ -5,6 +5,19 @@
 
 ---
 
+<!-- BEGIN portfolio-project-animations -->
+## Animated project guide
+
+These self-contained SVG animations explain the project workflow. They are illustrative guides, not recorded experiments or new performance results. Static content remains available when reduced motion is requested.
+
+### One equation, several encodings
+
+![One equation, several encodings — illustrative animation](docs/portfolio-animations/pdebench-lang.svg)
+
+Equivalent notation is illustrated; no model is run and no cross-dialect accuracy is simulated.
+
+<!-- END portfolio-project-animations -->
+
 ## Team Members & Responsibilities
 
 | Member | Responsibility |
